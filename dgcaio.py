@@ -59,11 +59,13 @@ def main():
 
     # add_repo サブコマンド
     add_repo_parser = subparsers.add_parser("add_repo", help="Add a new repository")
-    add_repo_parser.add_argument("repo_url", help="URL of the repository to add")
+    add_repo_parser.add_argument("id", help="Repository ID")
+    add_repo_parser.add_argument("path", help="Repository Path")
+    add_repo_parser.add_argument("--isremote", help="Is Remote Repository", choices=["true", "false"], default="true")
 
     # remove_repo サブコマンド
     remove_repo_parser = subparsers.add_parser("remove_repo", help="Remove a repository")
-    remove_repo_parser.add_argument("repo_name", help="Name of the repository to remove")
+    remove_repo_parser.add_argument("id", help="Repository ID")
 
     # パース
     args = parser.parse_args()
@@ -173,6 +175,21 @@ def main():
         else:
             print(f"[ERROR] Package Not Found: {package_id}")
 
+    elif args.mode == "add_repo":
+        aiofiles.append({"id": args.id, "isremote": args.isremote, "path": args.path})
+
+        with open(reposfile, "w") as f:
+            json.dump(aiofiles, f)
+        
+        print(f"[INFO] Repository '{args.id}' added.")
+
+    elif args.mode == "remove_repo":
+        # Remove the repository with matching ID
+        aiofiles = [repo for repo in aiofiles if repo["id"] != args.id]
+
+        with open(reposfile, "w") as f:
+            json.dump(aiofiles, f, indent=4)
+        print(f"[INFO] Repository '{args.id}' removed.")
 
 if __name__ == "__main__":
     main()
