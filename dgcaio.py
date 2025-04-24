@@ -35,7 +35,7 @@ def datetime_to_dgc_epoch64(dt: datetime) -> str:
         dt = dt.replace(tzinfo=timezone.utc)
     delta = dt - DGC_EPOCH_BASE
     milliseconds = int(delta.total_seconds() * 1000)
-    binary_str = format(milliseconds, '064b')  # 64ビット固定長
+    binary_str = format(milliseconds, '064b')
     return binary_str
 
 def dgc_epoch64_to_datetime(dgc_epoch_str: str) -> datetime:
@@ -47,27 +47,22 @@ def main():
     parser = argparse.ArgumentParser(prog='dgcaio', description='Most Customizable Package Installer', epilog='MIT License, Copyright (c) 2025 DiamondGotCat')
     subparsers = parser.add_subparsers(dest="mode", required=True)
 
-    # list サブコマンド
     list_parser = subparsers.add_parser("list", help="List installed packages")
     list_parser.add_argument("content", help="Packages / Repositorys", choices=["packages", "repositorys"])
 
-    # install サブコマンド
     run_parser = subparsers.add_parser("run", help="Run Package Script")
     run_parser.add_argument("id", help="Specify package script")
     run_parser.add_argument("package", help="ID of the package")
     run_parser.add_argument("--version", help="Specify package version", default="none")
 
-    # add_repo サブコマンド
     add_repo_parser = subparsers.add_parser("add_repo", help="Add a new repository")
     add_repo_parser.add_argument("id", help="Repository ID")
     add_repo_parser.add_argument("path", help="Repository Path")
     add_repo_parser.add_argument("--isremote", help="Is Remote Repository", choices=["true", "false"], default="true")
 
-    # remove_repo サブコマンド
     remove_repo_parser = subparsers.add_parser("remove_repo", help="Remove a repository")
     remove_repo_parser.add_argument("id", help="Repository ID")
 
-    # パース
     args = parser.parse_args()
 
     now = datetime.now()
@@ -80,7 +75,6 @@ def main():
     print(f"Current Time(dgce64): {datetime_to_dgc_epoch64(now)}")
     print("Load Repository List: $HOME/.dgc/repos.dgcaio")
 
-    # Available Packages
     os.makedirs(os.path.dirname(reposfile), exist_ok=True)
 
     if os.path.isfile(reposfile):
@@ -104,7 +98,6 @@ def main():
         with open(reposfile, "r") as f:
             aiofiles = json.load(f)
 
-    # Installed Packages
     os.makedirs(os.path.dirname(installedfile), exist_ok=True)
 
     if os.path.isfile(installedfile):
@@ -196,7 +189,6 @@ def main():
         print(f"[INFO] Repository '{args.id}' added.")
 
     elif args.mode == "remove_repo":
-        # Remove the repository with matching ID
         aiofiles = [repo for repo in aiofiles if repo["id"] != args.id]
 
         with open(reposfile, "w") as f:
