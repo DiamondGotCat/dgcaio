@@ -113,17 +113,7 @@ def main():
 
     else:
         file = open(installedfile, "w")
-        file.write(
-"""
-[
-    {
-        "id": "dgcaio",
-        "repo": "none",
-        "version": "1.0"
-    }
-]
-""".strip()
-)
+        file.write("[]\n")
         file.close()
 
         with open(installedfile, "r") as f:
@@ -167,6 +157,28 @@ def main():
                     pylo_script = package["versions"][package_version][action_id]
                     run_pylo(pylo_script)
                     print(f"[INFO] Action Finished.")
+
+                    if action_id == "install":
+                        repo_id = None
+                        for rid, repo in aio_list.items():
+                            if any(p["id"] == package_id for p in repo["packages"]):
+                                repo_id = rid
+                                break
+
+                        if repo_id is None:
+                            repo_id = "unknown"
+
+                        already_installed = any(p["id"] == package_id and p["version"] == package_version for p in installed_packages)
+                        if not already_installed:
+                            installed_packages.append({
+                                "id": package_id,
+                                "repo": repo_id,
+                                "version": package_version
+                            })
+                            with open(installedfile, "w") as f:
+                                json.dump(installed_packages, f, indent=4)
+
+
                 else:
                     print(f"[ERROR] Action Not Found: {action_id}")
             else:
@@ -188,7 +200,7 @@ def main():
         aiofiles = [repo for repo in aiofiles if repo["id"] != args.id]
 
         with open(reposfile, "w") as f:
-            json.dump(aiofiles, f, indent=4)
+            json.dump(aiofiles, f)
         print(f"[INFO] Repository '{args.id}' removed.")
 
 if __name__ == "__main__":
