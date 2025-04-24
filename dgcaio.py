@@ -169,7 +169,22 @@ def main():
                                 "version": package_version
                             })
                             with open(installedfile, "w") as f:
-                                json.dump(installed_packages, f, indent=4)
+                                json.dump(installed_packages, f)
+
+                    elif action_id == "remove":
+                        before_count = len(installed_packages)
+                        installed_packages = [
+                            p for p in installed_packages
+                            if not (p["id"] == package_id and p["version"] == package_version)
+                        ]
+                        after_count = len(installed_packages)
+
+                        if before_count != after_count:
+                            with open(installedfile, "w") as f:
+                                json.dump(installed_packages, f)
+                            print(f"[INFO] Package '{package_id}' removed from installed list.")
+                        else:
+                            print(f"[WARN] Package '{package_id}' was not in installed list.")
 
 
                 else:
