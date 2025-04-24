@@ -1,6 +1,22 @@
 # dgcaio (DGC-All-In-One)
 DGC-All-In-One: Most Customizable Package Installer
 
+## Requirements
+
+### dgcaio
+- `requests`
+
+### Pylo
+- `requests`
+- `rich`
+
+## Arguments
+- `list {packages|repositorys}`: List installed Packages / Repositorys
+- `run (Action ID) (Package ID) [--version (Version)]`: List installed packages
+- `add_repo (Repository ID) (Repository Path / URL) [--isremote {true|false}]`: Add Repository
+  - Default of `--isremote`: `true`
+- `remove_repo (Repository ID)`: Remove Repository
+
 ## dgcaio Repository File
 ```
 {
