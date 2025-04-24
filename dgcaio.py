@@ -11,13 +11,13 @@ import os
 from os.path import expanduser
 from datetime import datetime, timezone, timedelta
 
-import pylo2
-run_pylo = pylo2.run_text
+import pylo3
+run_pylo = pylo3.run_text
 
 # ----- Versions -----
 
 dgcaio_version = "1.0"
-pylo_version = pylo2.Interpreter.VERSION
+pylo_version = pylo3.Interpreter.VERSION
 
 # ----- Variables -----
 

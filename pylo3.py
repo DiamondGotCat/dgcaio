@@ -10,7 +10,7 @@ import requests
 from rich.console import Console
 from rich.traceback import install
 
-VERSION = "Pylo 2.2"
+VERSION = "Pylo 3.0"
 
 # rich のトレースバック表示を有効化
 install()
@@ -430,103 +430,120 @@ class Interpreter:
     def __init__(self):
         self.global_env = Environment()
         self.setup_builtins()
+
+    def module_enable(self, id):
+        if id == "default":
+            self.module_enable("system")
+            self.module_enable("standard")
+            self.module_enable("stdmath")
+            self.module_enable("conv")
+            self.module_enable("import")
+            self.module_enable("exec")
+
+        elif id == "system":
+            def get_pylo_version():
+                return self.VERSION
+            self.global_env.set("pylo.version", get_pylo_version)
+
+            def enable_pylo_module(id):
+                self.module_enable(id)
+            self.global_env.set("pylo.modules.enable", enable_pylo_module)
+
+        elif id == "standard":
+            self.global_env.set("standard.input", lambda: sys.stdin.read())
+            self.global_env.set("standard.output", lambda content, end="\n": sys.stdout.write(str(content) + end))
+            self.global_env.set("show", lambda content, end="\n": print(str(content), end=end))
+            self.global_env.set("ask", input)
+
+        elif id == "stdmath":
+            self.global_env.set("min", min)
+            self.global_env.set("max", max)
+            self.global_env.set("mod", lambda a, b: a % b)
+
+        elif id == "conv":
+            self.global_env.set("conv.str", str)
+            self.global_env.set("conv.int", int)
+
+        elif id == "import":
+            def import_pylo(file_path):
+                if not os.path.isfile(file_path):
+                    raise RuntimeError(f"File not found: {file_path}.")
+                with open(file_path, encoding='utf-8') as f:
+                    code = f.read()
+                tokens = tokenize(code)
+                parser = Parser(tokens)
+                ast = parser.parse()
+                self.interpret(ast)
+            self.global_env.set("import.pylo", import_pylo)
+
+            def import_py(file_path):
+                if not os.path.isfile(file_path):
+                    raise RuntimeError(f"File not found: {file_path}.")
+                with open(file_path, encoding='utf-8') as f:
+                    code = f.read()
+                local_dict = {}
+                exec(code, local_dict)
+                for key, value in local_dict.items():
+                    if callable(value) and not key.startswith('__'):
+                        self.global_env.set(key, value)
+            self.global_env.set("import.py", import_py)
+        
+        elif id == "exec":
+            def exec_pylo(code_string):
+                tokens = tokenize(code_string)
+                parser = Parser(tokens)
+                ast = parser.parse()
+                self.interpret(ast)
+            self.global_env.set("exec.pylo", exec_pylo)
+
+            def exec_py(code_string):
+                local_dict = {}
+                exec(code_string, local_dict)
+                for key, value in local_dict.items():
+                    if callable(value) and not key.startswith('__'):
+                        self.global_env.set(key, value)
+            self.global_env.set("exec.py", exec_py)
+        
+        elif id == "https":
+            def https_get_save(url, path):
+                r = requests.get(url)
+                with open(path, 'wb') as saveFile:
+                    saveFile.write(r.content)
+            self.global_env.set("https.get.save", https_get_save)
+            
+            def https_post_save(url, path):
+                r = requests.post(url)
+                with open(path, 'wb') as saveFile:
+                    saveFile.write(r.content)
+            self.global_env.set("https.post.save", https_post_save)
+            
+            def https_get_text(url):
+                r = requests.get(url)
+                return r.text
+            self.global_env.set("https.get.text", https_get_text)
+            
+            def https_get_json(url):
+                r = requests.get(url)
+                return r.json()
+            self.global_env.set("https.get.json", https_get_json)
+            
+            def https_post_text(url):
+                r = requests.post(url)
+                return r.text
+            self.global_env.set("https.post.text", https_post_text)
+            
+            def https_post_json(url):
+                r = requests.post(url)
+                return r.json()
+            self.global_env.set("https.post.json", https_post_json)
+            
+            def https_post_json(url):
+                r = requests.post(url)
+                return r.json()
+            self.global_env.set("file.isexist", https_post_json)
+
     def setup_builtins(self):
-        # ----- Pylo Functions -----
-
-        self.global_env.set("standard.input", lambda: sys.stdin.read())
-
-        self.global_env.set("standard.output", lambda content, end="\n": sys.stdout.write(str(content) + end))
-
-        self.global_env.set("show", lambda content, end="\n": print(str(content), end=end))
-
-        self.global_env.set("min", min)
-
-        self.global_env.set("max", max)
-
-        self.global_env.set("mod", lambda a, b: a % b)
-
-        self.global_env.set("conv.str", str)
-
-        self.global_env.set("conv.int", int)
-
-        def get_pylo_version():
-            return self.VERSION
-        self.global_env.set("pylo.version", get_pylo_version)
-
-        def import_pylo(file_path):
-            if not os.path.isfile(file_path):
-                raise RuntimeError(f"File not found: {file_path}.")
-            with open(file_path, encoding='utf-8') as f:
-                code = f.read()
-            tokens = tokenize(code)
-            parser = Parser(tokens)
-            ast = parser.parse()
-            self.interpret(ast)
-        self.global_env.set("import.pylo", import_pylo)
-
-        def import_py(file_path):
-            if not os.path.isfile(file_path):
-                raise RuntimeError(f"File not found: {file_path}.")
-            with open(file_path, encoding='utf-8') as f:
-                code = f.read()
-            local_dict = {}
-            exec(code, local_dict)
-            for key, value in local_dict.items():
-                if callable(value) and not key.startswith('__'):
-                    self.global_env.set(key, value)
-        self.global_env.set("import.py", import_py)
-
-        def exec_rain(code_string):
-            tokens = tokenize(code_string)
-            parser = Parser(tokens)
-            ast = parser.parse()
-            self.interpret(ast)
-        self.global_env.set("exec.pylo", exec_rain)
-
-        def exec_py(code_string):
-            local_dict = {}
-            exec(code_string, local_dict)
-            for key, value in local_dict.items():
-                if callable(value) and not key.startswith('__'):
-                    self.global_env.set(key, value)
-        self.global_env.set("exec.py", exec_py)
-        
-        def https_get_save(url, path):
-            r = requests.get(url)
-            with open(path, 'wb') as saveFile:
-                saveFile.write(r.content)
-        self.global_env.set("https.get.save", https_get_save)
-        
-        def https_post_save(url, path):
-            r = requests.post(url)
-            with open(path, 'wb') as saveFile:
-                saveFile.write(r.content)
-        self.global_env.set("https.post.save", https_post_save)
-        
-        def https_get_text(url):
-            r = requests.get(url)
-            return r.text
-        self.global_env.set("https.get.text", https_get_text)
-        
-        def https_get_json(url):
-            r = requests.get(url)
-            return r.json()
-        self.global_env.set("https.get.json", https_get_json)
-        
-        def https_post_text(url):
-            r = requests.post(url)
-            return r.text
-        self.global_env.set("https.post.text", https_post_text)
-        
-        def https_post_json(url):
-            r = requests.post(url)
-            return r.json()
-        self.global_env.set("https.post.json", https_post_json)
-        
-        def https_post_json(url):
-            r = requests.post(url)
-            return r.json()
-        self.global_env.set("file.isexist", https_post_json)
+        self.module_enable("default")
         
     def interpret(self, node):
         return self.execute(node, self.global_env)
