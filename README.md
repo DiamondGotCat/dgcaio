@@ -1,7 +1,7 @@
-# dgcaio
+# dgcaio (DGC-All-In-One)
 DGC-All-In-One: Most Customizable Package Installer
 
-## DGCAIO Repository File
+## dgcaio Repository File
 ```
 {
   "last-updated": "0000000000000000000000001011100111111101000001010010001110010001",
